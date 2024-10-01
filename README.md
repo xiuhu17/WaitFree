@@ -1,0 +1,1 @@
+Borrowed from outside resources
