@@ -41,3 +41,10 @@ auto get(Tuple_ input) {
     auto grab = static_cast<typename helper<idx, Tuple_>::Type>(input);
     return grab.get_val();
 }
+
+
+int main() {
+    Tuple<int, double, int, int, char> test(1, 2.0, 3, 4, 'a');
+    std::cout << get<2>(test);
+    return 0;
+}
