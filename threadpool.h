@@ -73,15 +73,13 @@ private:
       
       bool dequeued; 
       
-
       while (!m_pool->m_shutdown) {
         {
 
           std::unique_lock<std::mutex> lock(m_pool->m_conditional_mutex);
 
-          if (m_pool->m_queue.empty()) {
+          while (m_pool->m_queue.empty()) {
             m_pool->m_conditional_lock.wait(lock); 
-
           }
 
           dequeued = m_pool->m_queue.dequeue(func);
@@ -125,41 +123,31 @@ public:
     }
   }
 
- 
-
   void shutdown() {
     m_shutdown = true;
     m_conditional_lock.notify_all();
     
     for (int i = 0; i < m_threads.size(); ++i) {
       if(m_threads[i].joinable()) { 
-
         m_threads[i].join(); 
-
       }
     }
   }
 
 
   template<typename F, typename...Args>
-  auto submit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {
+  auto submit(F&& f, Args&&... args) {
+    using wrap_func_t = decltype(f(args...))();
+    using namespace std;
+    auto task_ptr = make_shared<packaged_task<wrap_func_t>>(bind(forward<F>(f), forward<Args>(args)...));
 
-    std::function<decltype(f(args...))()> func = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-
-
-    auto task_ptr = std::make_shared<std::packaged_task<decltype(f(args...))()>>(func);
-
-
-    std::function<void()> wrapper_func = [task_ptr]() {
+    function<void()> wrapper_func = [task_ptr]() {
       (*task_ptr)(); 
     };
 
-
     m_queue.enqueue(wrapper_func);
 
-
     m_conditional_lock.notify_one();
-
 
     return task_ptr->get_future();
   }
