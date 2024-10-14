@@ -141,11 +141,10 @@ public:
     using namespace std;
     auto task_ptr = make_shared<packaged_task<wrap_func_t>>(bind(forward<F>(f), forward<Args>(args)...));
 
-    function<void()> wrapper_func = [task_ptr]() {
-      (*task_ptr)(); 
-    };
 
-    m_queue.enqueue(wrapper_func);
+    m_queue.enqueue([task_ptr]() {
+      (*task_ptr)(); 
+    });
 
     m_conditional_lock.notify_one();
 
