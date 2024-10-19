@@ -1,1 +1,1 @@
-WF Q, Threadpool, Promise&Future borrowed from outside
+Most of the implementation borrowed from zhihu: https://www.zhihu.com/people/yan-ge-ge-32-1
